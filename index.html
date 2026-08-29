@@ -1069,6 +1069,7 @@
         /* ================= Estado ================= */
         let panelActivo = "operarios";
         let hayCambiosPendientes = false;
+        let ultimoNombreArchivo = "";
         const materialesDesa = []; // { nombre, precio, qty }
 
         function marcarCambiosPendientes() {
@@ -1485,6 +1486,11 @@
           return `Calculadora Paco - ${sufijo.replace(/[\\/:*?"<>|]/g, "-")}.json`;
         }
 
+        function prepararNombrePdf() {
+          const nombreJson = ultimoNombreArchivo || nombreArchivo();
+          document.title = nombreJson.replace(/\.json$/, ".pdf");
+        }
+
         function exportarEstado() {
           const blob = new Blob(
             [JSON.stringify(estadoCalculadora(), null, 2)],
@@ -1494,7 +1500,8 @@
           );
           const enlace = document.createElement("a");
           enlace.href = URL.createObjectURL(blob);
-          enlace.download = nombreArchivo();
+          ultimoNombreArchivo = nombreArchivo();
+          enlace.download = ultimoNombreArchivo;
           enlace.click();
           URL.revokeObjectURL(enlace.href);
         }
@@ -1664,7 +1671,10 @@
         });
 
         document.querySelectorAll(".print-summary").forEach((button) => {
-          button.addEventListener("click", () => window.print());
+          button.addEventListener("click", () => {
+            prepararNombrePdf();
+            window.print();
+          });
         });
 
         window.addEventListener("beforeunload", (event) => {
