@@ -843,7 +843,10 @@
             >
               <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar resumen
             </button>
-            <button class="btn btn-secondary print-summary">
+            <button
+              class="btn btn-secondary print-summary"
+              data-pdf-title="Resumen del servicio"
+            >
               <i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir
             </button>
           </div>
@@ -917,7 +920,10 @@
             >
               <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar resumen
             </button>
-            <button class="btn btn-secondary print-summary">
+            <button
+              class="btn btn-secondary print-summary"
+              data-pdf-title="Resumen del servicio"
+            >
               <i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir
             </button>
           </div>
@@ -948,7 +954,10 @@
             <button class="btn btn-secondary copy-benefit">
               <i class="fa-solid fa-copy" aria-hidden="true"></i> Copiar resumen
             </button>
-            <button class="btn btn-secondary print-summary">
+            <button
+              class="btn btn-secondary print-summary"
+              data-pdf-title="Beneficio del parte"
+            >
               <i class="fa-solid fa-print" aria-hidden="true"></i> Imprimir
             </button>
           </div>
@@ -1085,7 +1094,9 @@
         function desplOperarios(km) {
           if (km <= 0) return 0;
           const t = TARIFAS.operarios;
-          return km <= t.desplBaseKm ? t.desplBase : km * t.desplMas30Km;
+          return km <= t.desplBaseKm
+            ? t.desplBase
+            : t.desplBase + (km - t.desplBaseKm) * t.desplMas30Km;
         }
 
         function desplDesa(km) {
@@ -1486,9 +1497,10 @@
           return `Calculadora Paco - ${sufijo.replace(/[\\/:*?"<>|]/g, "-")}.json`;
         }
 
-        function prepararNombrePdf() {
-          const nombreJson = ultimoNombreArchivo || nombreArchivo();
-          document.title = nombreJson.replace(/\.json$/, ".pdf");
+        function prepararNombrePdf(tituloSeccion) {
+          const nombreParte = $("nombre-parte").value.trim();
+          const sufijo = nombreParte || fechaArchivoEspana();
+          document.title = `${tituloSeccion} - ${sufijo.replace(/[\\/:*?"<>|]/g, "-")}.pdf`;
         }
 
         function exportarEstado() {
@@ -1672,7 +1684,7 @@
 
         document.querySelectorAll(".print-summary").forEach((button) => {
           button.addEventListener("click", () => {
-            prepararNombrePdf();
+            prepararNombrePdf(button.dataset.pdfTitle);
             window.print();
           });
         });
