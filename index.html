@@ -238,6 +238,14 @@
         font-size: 0.75rem;
         color: var(--muted);
       }
+      .field input.hour-input.invalid {
+        border-color: var(--danger);
+        box-shadow: 0 0 0 3px rgba(192, 57, 43, 0.15);
+      }
+      .input-error {
+        color: var(--danger);
+        font-size: 0.75rem;
+      }
 
       .switch-row {
         display: flex;
@@ -723,24 +731,32 @@
             <div class="field">
               <label for="comun-horas-normal">Horas día normal</label>
               <input
-                type="number"
+                type="text"
+                class="hour-input"
                 id="comun-horas-normal"
-                min="0"
-                step="0.5"
-                inputmode="decimal"
-                placeholder="0"
+                inputmode="text"
+                pattern="(?:(\d+(?:[.,]\d+)?)\s*h?|(\d+)\s*h\s*([0-5]?\d)\s*m|(\d+)\s*m)"
+                data-error="error-horas-normal"
+                placeholder="1.5, 1h 30m o 30m"
               />
+              <span class="input-error" id="error-horas-normal" hidden
+                >Formato no válido. Usa 1.5, 1.5h, 1h 30m o 30m.</span
+              >
             </div>
             <div class="field">
               <label for="comun-horas-festivo">Horas festivo / noche</label>
               <input
-                type="number"
+                type="text"
+                class="hour-input"
                 id="comun-horas-festivo"
-                min="0"
-                step="0.5"
-                inputmode="decimal"
-                placeholder="0"
+                inputmode="text"
+                pattern="(?:(\d+(?:[.,]\d+)?)\s*h?|(\d+)\s*h\s*([0-5]?\d)\s*m|(\d+)\s*m)"
+                data-error="error-horas-festivo"
+                placeholder="1.5, 1h 30m o 30m"
               />
+              <span class="input-error" id="error-horas-festivo" hidden
+                >Formato no válido. Usa 1.5, 1.5h, 1h 30m o 30m.</span
+              >
               <span class="sub">Festivos y de 19:00 a 07:00</span>
             </div>
           </div>
@@ -1070,10 +1086,42 @@
         const $ = (id) => document.getElementById(id);
         const fmt = (n) =>
           n.toLocaleString("es-ES", { style: "currency", currency: "EUR" });
+        const HORAS_REGEX =
+          /^(?:(\d+(?:[.,]\d+)?)\s*h?|(\d+)\s*h\s*([0-5]?\d)\s*m)$/i;
+        const HORAS_MINUTOS_REGEX = /^([0-9]+) *m$/i;
+        const HORAS_INPUT_IDS = ["comun-horas-normal", "comun-horas-festivo"];
         const num = (el) => {
           const v = parseFloat(el.value);
           return isNaN(v) || v < 0 ? 0 : v;
         };
+
+        function validarHoras(el) {
+          const valor = el.value.trim();
+          const valido =
+            valor === "" ||
+            HORAS_REGEX.test(valor) ||
+            HORAS_MINUTOS_REGEX.test(valor);
+          el.classList.toggle("invalid", !valido);
+          el.setAttribute("aria-invalid", String(!valido));
+          el.setCustomValidity(
+            valido ? "" : "Usa 1.5, 1.5h, 1h 30m o 30m como formato de horas.",
+          );
+          const error = $(el.dataset.error);
+          if (error) error.hidden = valido;
+          return valido;
+        }
+
+        function parseHoras(el) {
+          const valor = el.value.trim();
+          if (!validarHoras(el) || !valor) return 0;
+          const match = HORAS_REGEX.exec(valor);
+          if (match) {
+            return match[1]
+              ? parseFloat(match[1].replace(",", "."))
+              : Number(match[2]) + Number(match[3]) / 60;
+          }
+          return Number(HORAS_MINUTOS_REGEX.exec(valor)[1]) / 60;
+        }
 
         /* ================= Estado ================= */
         let panelActivo = "operarios";
@@ -1108,6 +1156,10 @@
             .precio;
         }
 
+        function horasFacturables(horas) {
+          return horas > 0 && horas < 1 ? 1 : horas;
+        }
+
         function calcOperarios() {
           const t = TARIFAS.operarios;
           const desplOn = $("comun-despl-on").checked;
@@ -1117,8 +1169,8 @@
             1,
             Math.round(num($("comun-operarios")) || 1),
           );
-          const hN = num($("comun-horas-normal"));
-          const hF = num($("comun-horas-festivo"));
+          const hN = horasFacturables(parseHoras($("comun-horas-normal")));
+          const hF = horasFacturables(parseHoras($("comun-horas-festivo")));
           const manoObra = (hN * t.horaNormal + hF * t.horaFestivo) * operarios;
           const materiales = num($("op-materiales"));
           return {
@@ -1167,8 +1219,8 @@
             1,
             Math.round(num($("comun-operarios")) || 1),
           );
-          const hN = num($("comun-horas-normal"));
-          const hF = num($("comun-horas-festivo"));
+          const hN = horasFacturables(parseHoras($("comun-horas-normal")));
+          const hF = horasFacturables(parseHoras($("comun-horas-festivo")));
           const manoObra = (hN * t.horaNormal + hF * t.horaFestivo) * operarios;
           const materiales = materialesDesa.reduce(
             (s, m) => s + m.precio * m.qty,
@@ -1420,6 +1472,7 @@
         ].forEach((id) =>
           $(id).addEventListener("input", () => {
             marcarCambiosPendientes();
+            if (HORAS_INPUT_IDS.includes(id)) validarHoras($(id));
             update();
           }),
         );
@@ -1504,6 +1557,10 @@
         }
 
         function exportarEstado() {
+          if (!HORAS_INPUT_IDS.every((id) => validarHoras($(id)))) {
+            window.alert("Corrige el formato de las horas antes de exportar.");
+            return;
+          }
           const blob = new Blob(
             [JSON.stringify(estadoCalculadora(), null, 2)],
             {
@@ -1528,6 +1585,11 @@
           $("comun-operarios").value = estado.operarios || 1;
           $("comun-horas-normal").value = estado.horasNormal || "";
           $("comun-horas-festivo").value = estado.horasFestivo || "";
+          if (!HORAS_INPUT_IDS.every((id) => validarHoras($(id)))) {
+            throw new Error(
+              "El archivo contiene un formato de horas no válido.",
+            );
+          }
           $("op-materiales").value = estado.materialesOperarios || "";
           $("desa-material-qty").value = estado.cantidadMaterialDesa || 1;
           $("desa-custom-price").value = estado.precioManualDesa || "";
