@@ -412,6 +412,10 @@
         font-weight: 700;
         white-space: nowrap;
       }
+      .summary-list li.summary-total,
+      .summary-list li.summary-total span {
+        font-weight: 700;
+      }
       .summary-list li.muted {
         color: var(--muted);
         font-size: 0.82rem;
@@ -1122,6 +1126,10 @@
                 value: hF * t.horaFestivo * operarios,
               },
               {
+                label: "A pagar a operario (desplazamiento + mano de obra)",
+                value: despl + manoObra,
+              },
+              {
                 label: "Materiales reales (no pagados al técnico)",
                 value: materiales,
               },
@@ -1233,6 +1241,9 @@
           ul.innerHTML = "";
           data.lineas.forEach((l) => {
             const li = document.createElement("li");
+            if (/^(A pagar|Total)/.test(l.label)) {
+              li.className = "summary-total";
+            }
             const s1 = document.createElement("span");
             s1.textContent = l.label;
             const s2 = document.createElement("span");
@@ -1411,8 +1422,7 @@
               return `${valores[0].textContent}: ${valores[1].textContent}`;
             },
           );
-          const total = $("total-amount").textContent;
-          return [titulo, "", ...lineas, "", `TOTAL: ${total}`].join("\n");
+          return [titulo, "", ...lineas].join("\n");
         }
 
         function textoBeneficio() {
