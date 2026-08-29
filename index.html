@@ -539,6 +539,33 @@
         display: block;
         animation: fadeIn 0.25s ease;
       }
+      .drop-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        place-items: center;
+        padding: 1.5rem;
+        background: rgba(31, 78, 121, 0.88);
+        color: #fff;
+        z-index: 100;
+      }
+      .drop-overlay.visible {
+        display: grid;
+      }
+      .drop-overlay-message {
+        width: min(100%, 560px);
+        padding: 2rem;
+        border: 3px dashed #fff;
+        border-radius: var(--radius);
+        text-align: center;
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+      .drop-overlay-message i {
+        display: block;
+        margin-bottom: 0.75rem;
+        font-size: 2.5rem;
+      }
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -935,6 +962,13 @@
         <button class="btn btn-reset" id="btn-reset">
           <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Limpiar
         </button>
+      </div>
+    </div>
+
+    <div class="drop-overlay" id="drop-overlay" aria-hidden="true">
+      <div class="drop-overlay-message">
+        <i class="fa-solid fa-file-import" aria-hidden="true"></i>
+        Suelta aquí el archivo JSON para importarlo
       </div>
     </div>
 
@@ -1504,6 +1538,18 @@
           update();
         }
 
+        async function importarArchivo(archivo) {
+          if (!archivo || !archivo.name.toLowerCase().endsWith(".json")) {
+            window.alert("Selecciona un archivo JSON de la calculadora.");
+            return;
+          }
+          try {
+            importarEstado(JSON.parse(await archivo.text()));
+          } catch (error) {
+            window.alert("No se pudo importar el archivo JSON.");
+          }
+        }
+
         $("btn-export").addEventListener("click", exportarEstado);
         $("btn-import").addEventListener("click", () =>
           $("input-import").click(),
@@ -1511,13 +1557,39 @@
         $("input-import").addEventListener("change", async (event) => {
           const [archivo] = event.target.files;
           if (!archivo) return;
-          try {
-            importarEstado(JSON.parse(await archivo.text()));
-          } catch (error) {
-            window.alert("No se pudo importar el archivo JSON.");
-          } finally {
-            event.target.value = "";
+          await importarArchivo(archivo);
+          event.target.value = "";
+        });
+
+        const dropOverlay = $("drop-overlay");
+        let arrastresActivos = 0;
+        document.addEventListener("dragenter", (event) => {
+          if (!event.dataTransfer.types.includes("Files")) return;
+          event.preventDefault();
+          arrastresActivos += 1;
+          dropOverlay.classList.add("visible");
+          dropOverlay.setAttribute("aria-hidden", "false");
+        });
+        document.addEventListener("dragover", (event) => {
+          if (event.dataTransfer.types.includes("Files"))
+            event.preventDefault();
+        });
+        document.addEventListener("dragleave", (event) => {
+          if (!event.dataTransfer.types.includes("Files")) return;
+          arrastresActivos -= 1;
+          if (arrastresActivos <= 0) {
+            arrastresActivos = 0;
+            dropOverlay.classList.remove("visible");
+            dropOverlay.setAttribute("aria-hidden", "true");
           }
+        });
+        document.addEventListener("drop", async (event) => {
+          if (!event.dataTransfer.files.length) return;
+          event.preventDefault();
+          arrastresActivos = 0;
+          dropOverlay.classList.remove("visible");
+          dropOverlay.setAttribute("aria-hidden", "true");
+          await importarArchivo(event.dataTransfer.files[0]);
         });
 
         function copiarTexto(texto) {
