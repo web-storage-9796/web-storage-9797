@@ -1263,7 +1263,8 @@
           const gastosDesplazamiento = operarios.despl;
           const gastosMateriales = operarios.materiales;
           const totalFactura = desa.total;
-          const totalGastos = operarios.totalGastos;
+          const totalGastos =
+            gastosHoras + gastosDesplazamiento + gastosMateriales;
           const beneficio = totalFactura - totalGastos;
           const parteBeneficio = beneficio / 2;
 
