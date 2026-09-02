@@ -1264,7 +1264,7 @@
           const gastosMateriales = operarios.materiales;
           const totalFactura = desa.total;
           const totalGastos =
-            gastosHoras + gastosDesplazamiento + gastosMateriales;
+            gastosHoras + gastosDesplazamiento; // No se debe sumar gastosMateriales a este cálculo
           const beneficio = totalFactura - totalGastos;
           const parteBeneficio = beneficio / 2;
 
