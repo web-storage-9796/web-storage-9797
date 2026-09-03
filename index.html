@@ -843,7 +843,7 @@
             >
           </div>
           <div class="switch-row">
-            <span>DESA paga materiales</span>
+            <span>DESA ya ha pagado materiales</span>
             <label class="switch">
               <input type="checkbox" id="op-desa-paga-materiales" />
               <span class="slider"></span>
@@ -1280,10 +1280,10 @@
             parteBeneficio +
             gastosHoras +
             gastosDesplazamiento +
-            (desaPagaMateriales ? gastosMateriales : 0);
+            (desaPagaMateriales ? 0 : gastosMateriales);
           const detalleFacturaNoe = desaPagaMateriales
-            ? "Parte del beneficio + gastos horas y desplazamiento + materiales"
-            : "Parte del beneficio + gastos horas y desplazamiento";
+            ? "Parte del beneficio + gastos horas y desplazamiento"
+            : "Parte del beneficio + gastos horas y desplazamiento + materiales";
 
           return {
             factura: [
