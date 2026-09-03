@@ -1270,16 +1270,25 @@
           const gastosDesplazamiento = operarios.despl;
           const gastosMateriales = operarios.materiales;
           const desaPagaMateriales = $("op-desa-paga-materiales").checked;
-          const facturaMateriales =
-            desa.materiales + (desaPagaMateriales ? gastosMateriales : 0);
-          const totalFactura =
-            desa.total + (desaPagaMateriales ? gastosMateriales : 0);
+          const gastosMaterialesImputables = desaPagaMateriales
+            ? 0
+            : gastosMateriales;
+          const facturaMateriales = desa.materiales;
+          const totalFactura = desa.total;
           const totalGastos =
+            gastosHoras + gastosDesplazamiento + gastosMaterialesImputables;
+          const costesParaBeneficio =
+            gastosHoras + gastosDesplazamiento + gastosMateriales;
+          const beneficio = totalFactura - costesParaBeneficio;
+          const parteBeneficio = beneficio / 2;
+          const facturaNoe =
+            parteBeneficio +
             gastosHoras +
             gastosDesplazamiento +
             (desaPagaMateriales ? gastosMateriales : 0);
-          const beneficio = totalFactura - totalGastos;
-          const parteBeneficio = beneficio / 2;
+          const detalleFacturaNoe = desaPagaMateriales
+            ? "Parte del beneficio + gastos horas y desplazamiento + materiales"
+            : "Parte del beneficio + gastos horas y desplazamiento";
 
           return {
             factura: [
@@ -1293,7 +1302,7 @@
               { label: "Desplazamiento", value: gastosDesplazamiento },
               {
                 label: "Materiales",
-                value: gastosMateriales,
+                value: gastosMaterialesImputables,
               },
               { label: "Total gastos reales", value: totalGastos },
             ],
@@ -1305,9 +1314,8 @@
               },
               { label: "Parte de Paco (Beneficio ÷ 2)", value: parteBeneficio },
               {
-                label:
-                  "Noe factura a DESA (Parte del beneficio + gastos horas y desplazamiento + materiales)",
-                value: parteBeneficio + totalGastos,
+                label: `Noe factura a DESA (${detalleFacturaNoe})`,
+                value: facturaNoe,
               },
             ],
           };
