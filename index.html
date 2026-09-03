@@ -1270,16 +1270,11 @@
           const gastosDesplazamiento = operarios.despl;
           const gastosMateriales = operarios.materiales;
           const desaPagaMateriales = $("op-desa-paga-materiales").checked;
-          const gastosMaterialesImputables = desaPagaMateriales
-            ? 0
-            : gastosMateriales;
           const facturaMateriales = desa.materiales;
           const totalFactura = desa.total;
           const totalGastos =
-            gastosHoras + gastosDesplazamiento + gastosMaterialesImputables;
-          const costesParaBeneficio =
             gastosHoras + gastosDesplazamiento + gastosMateriales;
-          const beneficio = totalFactura - costesParaBeneficio;
+          const beneficio = totalFactura - totalGastos;
           const parteBeneficio = beneficio / 2;
           const facturaNoe =
             parteBeneficio +
@@ -1302,7 +1297,7 @@
               { label: "Desplazamiento", value: gastosDesplazamiento },
               {
                 label: "Materiales",
-                value: gastosMaterialesImputables,
+                value: gastosMateriales,
               },
               { label: "Total gastos reales", value: totalGastos },
             ],
